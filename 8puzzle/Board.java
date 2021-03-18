@@ -6,6 +6,7 @@
 
 import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.StdOut;
+import edu.princeton.cs.algs4.StdRandom;
 
 import java.util.ArrayList;
 
@@ -20,7 +21,7 @@ public class Board {
     public Board(int[][] tiles) {
         if (tiles[0].length != tiles[1].length) throw new IllegalArgumentException();
         n = tiles.length;
-        this.tiles = tiles.clone();
+        this.tiles = copy2DimensialArray(tiles);
     }
 
     // string representation of this board
@@ -103,7 +104,8 @@ public class Board {
 
     // // does this board equal y?
     public boolean equals(Object y) {
-        if (y == null || getClass() != y.getClass())
+        if (this == y) return true;
+        if (y == null || this.getClass() != y.getClass())
             return false;
         Board that = (Board) y;
         if (this.n != that.n) return false;
@@ -117,8 +119,6 @@ public class Board {
 
     // all neighboring boards
     public Iterable<Board> neighbors() {
-        // TODO restrict cloning
-
         ArrayList<Board> neighbors = new ArrayList<>();
 
         int zeroRow = 0;
@@ -135,40 +135,58 @@ public class Board {
 
         // top
         if (zeroRow > 0) {
-            int[][] tempTiles = tiles.clone();
+            int[][] tempTiles = copy2DimensialArray(tiles);
             tempTiles[zeroRow][zeroColumn] = tiles[zeroRow - 1][zeroColumn];
             tempTiles[zeroRow - 1][zeroColumn] = 0;
             neighbors.add(new Board(tempTiles));
         }
 
+        // bottom
         if (zeroRow < n - 1) {
-            int[][] tempTiles = tiles.clone();
+            int[][] tempTiles = copy2DimensialArray(tiles);
             tempTiles[zeroRow][zeroColumn] = tiles[n - 1][zeroColumn];
             tempTiles[n - 1][zeroColumn] = 0;
             neighbors.add(new Board(tempTiles));
         }
 
+        // left
         if (zeroColumn > 0) {
-            int[][] tempTiles = tiles.clone();
+            int[][] tempTiles = copy2DimensialArray(tiles);
             tempTiles[zeroRow][zeroColumn] = tiles[zeroRow][zeroColumn - 1];
             tempTiles[zeroRow][zeroColumn - 1] = 0;
             neighbors.add(new Board(tempTiles));
         }
 
+        // right
         if (zeroColumn < n - 1) {
-            int[][] tempTiles = tiles.clone();
+            int[][] tempTiles = copy2DimensialArray(tiles);
             tempTiles[zeroRow][zeroColumn] = tempTiles[zeroRow][n - 1];
             tempTiles[zeroRow][n - 1] = 0;
             neighbors.add(new Board(tempTiles));
         }
 
         return neighbors;
-
     }
 
-    // TODO make function
-    // // a board that is obtained by exchanging any pair of tiles
-    // public Board twin()
+    // a board that is obtained by exchanging any pair of tiles
+    public Board twin() {
+        // 1) get random index and check != 0
+        // 2) get random nearest element and check != 0
+        // 3) swap elements and return new board
+        int randomTileValue = 0;
+        int randomRow = 0;
+        int randomColumn = 0;
+        while (randomTileValue == 0) {
+            randomColumn = StdRandom.uniform(0, n);
+            randomRow = StdRandom.uniform(0, n);
+            randomTileValue = tiles[randomRow][randomColumn];
+        }
+
+        int randomNeighborValue = 0;
+
+        // TODO get twin
+        return null;
+    }
 
     private int getElementRow(int value) {
         return (value - 1) / n;
@@ -176,6 +194,17 @@ public class Board {
 
     private int getElementColumn(int value) {
         return (value - 1) % n;
+    }
+
+    private int[][] copy2DimensialArray(int[][] sourceArray) {
+        int length = sourceArray.length;
+        int[][] copiedArray = new int[length][length];
+        for (int i = 0; i < length; i++) {
+            for (int j = 0; j < length; j++) {
+                copiedArray[i][j] = sourceArray[i][j];
+            }
+        }
+        return copiedArray;
     }
 
 
