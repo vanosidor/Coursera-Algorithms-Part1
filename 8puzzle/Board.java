@@ -124,11 +124,14 @@ public class Board {
         int zeroRow = 0;
         int zeroColumn = 0;
 
+        // find zero element
+        outer:
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
                 if (tiles[i][j] == 0) {
                     zeroRow = i;
                     zeroColumn = j;
+                    break outer;
                 }
             }
         }
@@ -144,8 +147,8 @@ public class Board {
         // bottom
         if (zeroRow < n - 1) {
             int[][] tempTiles = copy2DimensialArray(tiles);
-            tempTiles[zeroRow][zeroColumn] = tiles[n - 1][zeroColumn];
-            tempTiles[n - 1][zeroColumn] = 0;
+            tempTiles[zeroRow][zeroColumn] = tiles[zeroRow + 1][zeroColumn];
+            tempTiles[zeroRow + 1][zeroColumn] = 0;
             neighbors.add(new Board(tempTiles));
         }
 
@@ -160,8 +163,8 @@ public class Board {
         // right
         if (zeroColumn < n - 1) {
             int[][] tempTiles = copy2DimensialArray(tiles);
-            tempTiles[zeroRow][zeroColumn] = tempTiles[zeroRow][n - 1];
-            tempTiles[zeroRow][n - 1] = 0;
+            tempTiles[zeroRow][zeroColumn] = tempTiles[zeroRow][zeroColumn + 1];
+            tempTiles[zeroRow][zeroColumn + 1] = 0;
             neighbors.add(new Board(tempTiles));
         }
 
@@ -176,16 +179,63 @@ public class Board {
         int randomTileValue = 0;
         int randomRow = 0;
         int randomColumn = 0;
+
         while (randomTileValue == 0) {
-            randomColumn = StdRandom.uniform(0, n);
             randomRow = StdRandom.uniform(0, n);
+            randomColumn = StdRandom.uniform(0, n);
             randomTileValue = tiles[randomRow][randomColumn];
         }
 
-        int randomNeighborValue = 0;
 
-        // TODO get twin
-        return null;
+        ArrayList<TilePoint> neighborTilePoints = new ArrayList<>();
+
+        // top
+        if (randomRow > 0) {
+            int topValue = tiles[randomRow - 1][randomColumn];
+            if (topValue != 0) {
+                TilePoint topTilePoint = new TilePoint(topValue, randomRow - 1, randomColumn);
+                neighborTilePoints.add(topTilePoint);
+            }
+
+        }
+
+        // bottom
+        if (randomRow < n - 1) {
+            int bottomValue = tiles[n - 1][randomColumn];
+            if (bottomValue != 0) {
+                TilePoint bottomTilePoint = new TilePoint(bottomValue, n - 1, randomColumn);
+                neighborTilePoints.add(bottomTilePoint);
+            }
+        }
+
+        // left
+        if (randomColumn > 0) {
+            int leftValue = tiles[randomRow][randomColumn - 1];
+            if (leftValue != 0) {
+                TilePoint leftTilePoint = new TilePoint(leftValue, randomRow, randomColumn - 1);
+                neighborTilePoints.add(leftTilePoint);
+            }
+        }
+
+        // right
+        if (randomColumn < n - 1) {
+            int rightValue = tiles[randomRow][n - 1];
+            if (rightValue != 0) {
+                TilePoint rightTilePoint = new TilePoint(rightValue, randomRow, n - 1);
+                neighborTilePoints.add(rightTilePoint);
+            }
+        }
+
+        int neighborIndex = StdRandom.uniform(0, neighborTilePoints.size());
+        TilePoint neighborTilePoint = neighborTilePoints.get(neighborIndex);
+
+
+        int[][] twinTiles = copy2DimensialArray(tiles);
+
+        twinTiles[randomRow][randomColumn] = neighborTilePoint.value;
+        twinTiles[neighborTilePoint.row][neighborTilePoint.column] = randomTileValue;
+
+        return new Board(twinTiles);
     }
 
     private int getElementRow(int value) {
@@ -208,6 +258,20 @@ public class Board {
     }
 
 
+    class TilePoint {
+        private final int value;
+        private final int row;
+        private final int column;
+
+
+        TilePoint(int value, int row, int column) {
+            this.value = value;
+            this.row = row;
+            this.column = column;
+        }
+    }
+
+
     // unit testing (not graded)
     public static void main(String[] args) {
         In in = new In(args[0]);
@@ -220,18 +284,35 @@ public class Board {
         }
         Board initial = new Board(tiles);
 
-        // Test equals
-        Board test1 = new Board(tiles);
-        Board test2 = new Board(new int[][] { { 8, 1, 3 }, { 4, 0, 2 }, { 7, 6, 5 } });
-        StdOut.println("Are equals : " + test1.equals(test2));
+        StdOut.println("InitialBoard:");
+        StdOut.print(initial);
+
+        // Test equality
+        // Board test1 = new Board(tiles);
+        // Board test2 = new Board(new int[][] { { 8, 1, 3 }, { 4, 0, 2 }, { 7, 6, 5 } });
+        // StdOut.println("Are equals : " + test1.equals(test2));
 
         StdOut.println("hamming = " + String.valueOf(initial.hamming()));
         StdOut.println("manhattan = " + String.valueOf(initial.manhattan()));
         StdOut.print("is goal: " + initial.isGoal());
         StdOut.print(initial.goalBoard);
 
-        initial.neighbors();
+        // check neighbors
+        StdOut.println("Neighbors check:");
+        for (Board b : initial.neighbors()) {
+            StdOut.print(b);
+        }
 
-        StdOut.print(initial);
+        // check twin
+        // StdOut.println("Twins check:");
+        // StdOut.print(initial.twin());
+        // StdOut.print(initial.twin());
+        // StdOut.print(initial.twin());
+        // StdOut.print(initial.twin());
+        // StdOut.print(initial.twin());
+        // StdOut.print(initial.twin());
+        // StdOut.print(initial.twin());
+
+        // StdOut.print(initial);
     }
 }
