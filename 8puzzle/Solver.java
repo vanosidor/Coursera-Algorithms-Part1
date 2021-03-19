@@ -8,44 +8,41 @@ import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.MinPQ;
 import edu.princeton.cs.algs4.StdOut;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 
-// Check for this input
-// 3
-//         0 1 3
-//         4 2 5
-//         7 8 6
 public class Solver {
     private int moves = 0;
     private boolean solvable;
+    private GameNode currentGameNode;
 
     // find a solution to the initial board (using the A* algorithm)
     public Solver(Board initial) {
         if (initial == null) throw new IllegalArgumentException();
 
-        // TODO solve puzzle
-
         MinPQ<GameNode> initialBoardPQ = new MinPQ<>(new ManhattanPriorityBoardComparator());
         initialBoardPQ.insert(new GameNode(initial, null, moves()));
 
-        MinPQ<GameNode> twinBoardPQ = new MinPQ<>(new ManhattanPriorityBoardComparator());
-        Board twin = initial.twin();
-        twinBoardPQ.insert(new GameNode(twin, null, moves()));
+        // TODO revert
+        // MinPQ<GameNode> twinBoardPQ = new MinPQ<>(new ManhattanPriorityBoardComparator());
+        // Board twin = initial.twin();
+        // twinBoardPQ.insert(new GameNode(twin, null, moves()));
 
 
         while (true) {
-            // TODO optimize
-            // initial
-            GameNode currentGameNode = initialBoardPQ.delMin();
+            currentGameNode = initialBoardPQ.delMin();
             if (currentGameNode.board.isGoal()) {
                 solvable = true;
                 break;
             }
 
             moves++;
+
             for (Board b : currentGameNode.board.neighbors()) {
-                if (currentGameNode.prevBoard.equals(b)) initialBoardPQ
-                        .insert(new GameNode(b, currentGameNode.board, moves));
+
+                if (currentGameNode.prevNode == null || !b.equals(currentGameNode.prevNode.board))
+                    initialBoardPQ
+                            .insert(new GameNode(b, currentGameNode, moves));
             }
 
 
@@ -68,15 +65,26 @@ public class Solver {
 
     // min number of moves to solve initial board; -1 if unsolvable
     public int moves() {
-        // -1 if unsolvable
         if (isSolvable()) return moves;
         else return -1;
     }
 
     // sequence of boards in a shortest solution; null if unsolvable
     public Iterable<Board> solution() {
-        // return null if unsolvable
-        return null;
+        if (isSolvable() && currentGameNode != null) {
+            ArrayList<Board> solutionBoards = new ArrayList<>();
+            solutionBoards.add(currentGameNode.board);
+            GameNode prevNode = currentGameNode.prevNode;
+            while (prevNode != null) {
+                solutionBoards.add(prevNode.board);
+                prevNode = prevNode.prevNode;
+            }
+            // TODO make reverse
+            return solutionBoards;
+        }
+        else {
+            return null;
+        }
     }
 
     // test client (see below)
@@ -106,22 +114,21 @@ public class Solver {
 
     private class GameNode {
         private final Board board;
-        private final Board prevBoard;
+        private final GameNode prevNode;
         private final int moves;
-        // private final int moves;
+        private final int manhattan;
 
-        GameNode(Board board, Board prevBoard, int moves) {
+        GameNode(Board board, GameNode prevNode, int moves) {
             this.board = board;
-            this.prevBoard = board;
+            this.prevNode = prevNode;
             this.moves = moves;
+            this.manhattan = board.manhattan();
         }
     }
 
-
     private class ManhattanPriorityBoardComparator implements Comparator<GameNode> {
         public int compare(GameNode gameNode1, GameNode gameNode2) {
-            return gameNode1.moves + gameNode1.board.manhattan() - gameNode2.moves + gameNode2.board
-                    .manhattan();
+            return gameNode1.moves + gameNode1.manhattan - (gameNode2.moves + gameNode2.manhattan);
         }
     }
 
@@ -131,7 +138,6 @@ public class Solver {
                     .hamming();
         }
     }
-
 }
 
 
