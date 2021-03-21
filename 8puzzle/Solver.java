@@ -9,10 +9,12 @@ import edu.princeton.cs.algs4.MinPQ;
 import edu.princeton.cs.algs4.StdOut;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 
+// TODO puzzle3x3-13.txt
+// TODO puzzle3x3-27.txt (long time)
 public class Solver {
-    private int moves = 0;
     private boolean solvable;
     private GameNode currentGameNode;
 
@@ -21,41 +23,42 @@ public class Solver {
         if (initial == null) throw new IllegalArgumentException();
 
         MinPQ<GameNode> initialBoardPQ = new MinPQ<>(new ManhattanPriorityBoardComparator());
-        initialBoardPQ.insert(new GameNode(initial, null, moves()));
+        int moves = 0;
+        initialBoardPQ.insert(new GameNode(initial, null, moves));
 
-        // TODO revert
-        // MinPQ<GameNode> twinBoardPQ = new MinPQ<>(new ManhattanPriorityBoardComparator());
-        // Board twin = initial.twin();
-        // twinBoardPQ.insert(new GameNode(twin, null, moves()));
-
+        MinPQ<GameNode> twinBoardPQ = new MinPQ<>(new ManhattanPriorityBoardComparator());
+        Board twin = initial.twin();
+        twinBoardPQ.insert(new GameNode(twin, null, moves));
+        GameNode twinGameNode;
 
         while (true) {
             currentGameNode = initialBoardPQ.delMin();
+            twinGameNode = twinBoardPQ.delMin();
+
             if (currentGameNode.board.isGoal()) {
                 solvable = true;
+                break;
+            }
+
+            if (twinGameNode.board.isGoal()) {
+                solvable = false;
                 break;
             }
 
             moves++;
 
             for (Board b : currentGameNode.board.neighbors()) {
-
                 if (currentGameNode.prevNode == null || !b.equals(currentGameNode.prevNode.board))
                     initialBoardPQ
                             .insert(new GameNode(b, currentGameNode, moves));
             }
 
-
-            // TODO make twin
-            // twin
-            // if (twin.isGoal()) {
-            //     solvable = false;
-            //     break;
-            // }
-
+            for (Board b : twinGameNode.board.neighbors()) {
+                if (twinGameNode.prevNode == null || !b.equals(twinGameNode.prevNode.board))
+                    twinBoardPQ
+                            .insert(new GameNode(b, twinGameNode, moves));
+            }
         }
-
-        StdOut.println("end " + moves);
     }
 
     // is the initial board solvable? (see below)
@@ -65,7 +68,16 @@ public class Solver {
 
     // min number of moves to solve initial board; -1 if unsolvable
     public int moves() {
-        if (isSolvable()) return moves;
+        // TODO correct number of moves (not all program moves)
+        if (isSolvable() && currentGameNode != null) {
+            int minMoves = 0;
+            GameNode prevNode = currentGameNode.prevNode;
+            while (prevNode != null) {
+                minMoves++;
+                prevNode = prevNode.prevNode;
+            }
+            return minMoves;
+        }
         else return -1;
     }
 
@@ -79,7 +91,7 @@ public class Solver {
                 solutionBoards.add(prevNode.board);
                 prevNode = prevNode.prevNode;
             }
-            // TODO make reverse
+            Collections.reverse(solutionBoards);
             return solutionBoards;
         }
         else {

@@ -186,7 +186,7 @@ public class Board {
             randomTileValue = tiles[randomRow][randomColumn];
         }
 
-        // rewrite this part
+        //TODO rewrite this part
         ArrayList<TilePoint> neighborTilePoints = new ArrayList<>();
 
         // top
@@ -196,7 +196,6 @@ public class Board {
                 TilePoint topTilePoint = new TilePoint(topValue, randomRow - 1, randomColumn);
                 neighborTilePoints.add(topTilePoint);
             }
-
         }
 
         // bottom
@@ -256,7 +255,6 @@ public class Board {
         }
         return copiedArray;
     }
-
 
     private class TilePoint {
         private final int value;
