@@ -8,24 +8,6 @@ import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.MinPQ;
 import edu.princeton.cs.algs4.Stack;
 import edu.princeton.cs.algs4.StdOut;
-import edu.princeton.cs.algs4.Stopwatch;
-
-// TODO puzzle3x3-13.txt
-// TODO puzzle3x3-27.txt (long time)
-// TODO puzzle3x3-29.txt (long time)
-// TODO puzzle3x3-30.txt (out of memory)
-
-// puzzle14.txt
-// Delete number: 1700902 Insert number: 5308585
-//         Time elapsed total: 10.003 s
-//         Moves total: 850450
-
-// puzzle16.txt
-// Delete number: 362144 Insert number: 1192402
-//         Time elapsed total: 3.05 s
-//         Moves total: 181071
-//         Minimum number of moves = 16
-
 
 public class Solver {
     private boolean solvable;
@@ -35,86 +17,30 @@ public class Solver {
     public Solver(Board initial) {
         if (initial == null) throw new IllegalArgumentException();
 
-        // TODO remove
-        Stopwatch stopwatch = new Stopwatch();
-        int deleteNumber = 0;
-        int insertNumber = 0;
-
         solutionBoards = new Stack<>();
         MinPQ<SearchNode> searchNodes = new MinPQ<>();
         searchNodes.insert(new SearchNode(initial, null));
         searchNodes.insert(new SearchNode(initial.twin(), null));
 
-
         while (!searchNodes.min().board.isGoal()) {
             SearchNode currentSearchNode = searchNodes.delMin();
-            deleteNumber++;
-
             for (Board b : currentSearchNode.board.neighbors()) {
                 if (currentSearchNode.prevNode == null || !b
                         .equals(currentSearchNode.prevNode.board)) {
                     searchNodes.insert(new SearchNode(b, currentSearchNode));
-                    insertNumber++;
                 }
             }
         }
 
-        SearchNode currentSearchNode = searchNodes.min();
-        while (currentSearchNode.prevNode != null) {
-            solutionBoards.push(currentSearchNode.board);
-            currentSearchNode = currentSearchNode.prevNode;
+        SearchNode current = searchNodes.min();
+        while (current.prevNode != null) {
+            solutionBoards.push(current.board);
+            current = current.prevNode;
         }
 
-        solutionBoards.push(currentSearchNode.board);
+        solutionBoards.push(current.board);
 
-        if (currentSearchNode.board.isGoal()) solvable = true;
-
-        // old not optimal solution
-        /*Stopwatch stopwatch = new Stopwatch();
-        MinPQ<SearchNode> initialBoardPQ = new MinPQ<>(new ManhattanPriorityBoardComparator());
-        int moves = 0;
-        initialBoardPQ.insert(new SearchNode(initial, null, moves));
-
-        MinPQ<SearchNode> twinBoardPQ = new MinPQ<>(new ManhattanPriorityBoardComparator());
-        twinBoardPQ.insert(new SearchNode(initial.twin(), null, moves));
-        SearchNode twinSearchNode;
-
-        while (true) {
-            SearchNode currentSearchNode = initialBoardPQ.delMin();
-            twinSearchNode = twinBoardPQ.delMin();
-            deleteNumber += 2;
-
-            if (currentSearchNode.board.isGoal()) {
-                solvable = true;
-                break;
-            }
-
-            if (twinSearchNode.board.isGoal()) {
-                solvable = false;
-                break;
-            }
-
-            moves++;
-
-            for (Board b : currentSearchNode.board.neighbors()) {
-                if (currentSearchNode.prevNode == null || !b
-                        .equals(currentSearchNode.prevNode.board)) {
-                    initialBoardPQ
-                            .insert(new SearchNode(b, currentSearchNode, moves));
-                    // StdOut.print(b);
-                    insertNumber++;
-                }
-            }
-
-            for (Board b : twinSearchNode.board.neighbors()) {
-                if (twinSearchNode.prevNode == null || !b.equals(twinSearchNode.prevNode.board))
-                    twinBoardPQ
-                            .insert(new SearchNode(b, twinSearchNode, moves));
-                insertNumber++;
-            }
-        }*/
-        StdOut.println("Delete number: " + deleteNumber + " Insert number: " + insertNumber);
-        StdOut.println("Time elapsed total: " + stopwatch.elapsedTime() + " s");
+        if (current.board.equals(initial)) solvable = true;
     }
 
     // is the initial board solvable? (see below)
@@ -169,7 +95,7 @@ public class Solver {
             this.board = board;
             this.prevNode = prevNode;
             this.manhattan = board.manhattan();
-            if (prevNode != null) moves = prevNode.moves;
+            if (prevNode != null) moves = prevNode.moves + 1;
             else moves = 0;
         }
 

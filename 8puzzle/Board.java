@@ -181,31 +181,14 @@ public class Board {
         StdOut.println("InitialBoard:");
         StdOut.print(initial);
 
-        // Test equality
-        // Board test1 = new Board(tiles);
-        // Board test2 = new Board(new int[][] { { 8, 1, 3 }, { 4, 0, 2 }, { 7, 6, 5 } });
-        // StdOut.println("Are equals : " + test1.equals(test2));
-
         StdOut.println("hamming = " + String.valueOf(initial.hamming()));
         StdOut.println("manhattan = " + String.valueOf(initial.manhattan()));
-        StdOut.print("is goal: " + initial.isGoal());
+        StdOut.println("is goal: " + initial.isGoal());
 
         // check neighbors
-        StdOut.println("Neighbors check:");
+        StdOut.println("neighbors:");
         for (Board b : initial.neighbors()) {
             StdOut.print(b);
         }
-
-        // check twin
-        // StdOut.println("Twins check:");
-        // StdOut.print(initial.twin());
-        // StdOut.print(initial.twin());
-        // StdOut.print(initial.twin());
-        // StdOut.print(initial.twin());
-        // StdOut.print(initial.twin());
-        // StdOut.print(initial.twin());
-        // StdOut.print(initial.twin());
-
-        // StdOut.print(initial);
     }
 }
