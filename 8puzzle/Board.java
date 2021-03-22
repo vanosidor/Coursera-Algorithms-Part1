@@ -6,7 +6,6 @@
 
 import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.StdOut;
-import edu.princeton.cs.algs4.StdRandom;
 
 import java.util.ArrayList;
 
@@ -14,14 +13,12 @@ public class Board {
 
     private int n;
     private int[][] tiles;
-    private Board goalBoard;
 
     // create a board from an n-by-n array of tiles,
     // where tiles[row][col] = tile at (row, col)
     public Board(int[][] tiles) {
-        if (tiles[0].length != tiles[1].length) throw new IllegalArgumentException();
         n = tiles.length;
-        this.tiles = copy2DimensialArray(tiles);
+        this.tiles = copyTwoDimensional(tiles);
     }
 
     // string representation of this board
@@ -49,65 +46,46 @@ public class Board {
 
     // number of tiles out of place
     public int hamming() {
-        int res = 0;
-        int trueValue = 0;
+        int hamming = 0;
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                trueValue++;
-                if (tiles[i][j] != 0 && tiles[i][j] != trueValue) {
-                    res++;
+                if (tiles[i][j] != 0
+                        && tiles[i][j] != i * dimension() + j + 1) { // numeration starts with 1
+                    hamming++;
                 }
             }
         }
-        return res;
+        return hamming;
     }
 
     // sum of Manhattan distances between tiles and goal
     public int manhattan() {
-        int res = 0;
+        int manhattan = 0;
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                if (tiles[i][j] != 0) {
-                    int trueRow = getElementRow(tiles[i][j]);
-                    int trueCol = getElementColumn(tiles[i][j]);
-                    int rowMoves = Math.abs(i - trueRow);
-                    int colMoves = Math.abs(j - trueCol);
-                    res += colMoves + rowMoves;
+                if (tiles[i][j] != 0 && tiles[i][j] != i * dimension() + j + 1) {
+                    int goalRow = (tiles[i][j] - 1) / n;
+                    int goalCol = (tiles[i][j] - 1) % n;
+                    int rowMoves = Math.abs(i - goalRow);
+                    int colMoves = Math.abs(j - goalCol);
+                    manhattan += colMoves + rowMoves;
                 }
             }
         }
-        return res;
+        return manhattan;
     }
 
     // is this board the goal board?
     public boolean isGoal() {
-        if (goalBoard == null) {
-            int[][] goalTiles = new int[n][n];
-            int value = 0;
-            for (int i = 0; i < n; i++) {
-
-                for (int j = 0; j < n; j++) {
-                    value++;
-                    if (i == n - 1 && j == n - 1) {
-                        goalTiles[i][j] = 0;
-                    }
-                    else {
-                        goalTiles[i][j] = value;
-                    }
-
-                }
-            }
-            goalBoard = new Board(goalTiles);
-        }
-        return this.equals(goalBoard);
+        return hamming() == 0;
     }
 
     // // does this board equal y?
-    public boolean equals(Object y) {
-        if (this == y) return true;
-        if (y == null || this.getClass() != y.getClass())
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (object == null || this.getClass() != object.getClass())
             return false;
-        Board that = (Board) y;
+        Board that = (Board) object;
         if (this.n != that.n) return false;
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
@@ -121,154 +99,72 @@ public class Board {
     public Iterable<Board> neighbors() {
         ArrayList<Board> neighbors = new ArrayList<>();
 
-        int zeroRow = 0;
-        int zeroColumn = 0;
+        int zeroPosition = zeroPosition();
 
-        // find zero element
-        outer:
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                if (tiles[i][j] == 0) {
-                    zeroRow = i;
-                    zeroColumn = j;
-                    break outer;
-                }
-            }
+        int i = zeroPosition / dimension();
+        int j = zeroPosition % dimension();
+
+        if (i > 0) {
+            neighbors.add(new Board(swap(i, j, i - 1, j)));
         }
 
-        // top
-        if (zeroRow > 0) {
-            int[][] tempTiles = copy2DimensialArray(tiles);
-            tempTiles[zeroRow][zeroColumn] = tiles[zeroRow - 1][zeroColumn];
-            tempTiles[zeroRow - 1][zeroColumn] = 0;
-            neighbors.add(new Board(tempTiles));
+        if (i < n - 1) {
+            neighbors.add(new Board(swap(i, j, i + 1, j)));
         }
 
-        // bottom
-        if (zeroRow < n - 1) {
-            int[][] tempTiles = copy2DimensialArray(tiles);
-            tempTiles[zeroRow][zeroColumn] = tiles[zeroRow + 1][zeroColumn];
-            tempTiles[zeroRow + 1][zeroColumn] = 0;
-            neighbors.add(new Board(tempTiles));
+        if (j > 0) {
+            neighbors.add(new Board(swap(i, j, i, j - 1)));
         }
 
-        // left
-        if (zeroColumn > 0) {
-            int[][] tempTiles = copy2DimensialArray(tiles);
-            tempTiles[zeroRow][zeroColumn] = tiles[zeroRow][zeroColumn - 1];
-            tempTiles[zeroRow][zeroColumn - 1] = 0;
-            neighbors.add(new Board(tempTiles));
-        }
-
-        // right
-        if (zeroColumn < n - 1) {
-            int[][] tempTiles = copy2DimensialArray(tiles);
-            tempTiles[zeroRow][zeroColumn] = tempTiles[zeroRow][zeroColumn + 1];
-            tempTiles[zeroRow][zeroColumn + 1] = 0;
-            neighbors.add(new Board(tempTiles));
+        if (j < n - 1) {
+            neighbors.add(new Board(swap(i, j, i, j + 1)));
         }
 
         return neighbors;
     }
 
+    private int[][] swap(int i1, int j1, int i2, int j2) {
+        int[][] copy = copyTwoDimensional(tiles);
+        int tempValue = copy[i1][j1];
+        copy[i1][j1] = copy[i2][j2];
+        copy[i2][j2] = tempValue;
+        return copy;
+    }
+
+    private int zeroPosition() {
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (tiles[i][j] == 0) {
+                    return i * dimension() + j;
+                }
+            }
+        }
+        return -1;
+    }
+
     // a board that is obtained by exchanging any pair of tiles
     public Board twin() {
-        // 1) get random index and check != 0
-        // 2) get random nearest element and check != 0
-        // 3) swap elements and return new board
-        int randomTileValue = 0;
-        int randomRow = 0;
-        int randomColumn = 0;
-
-        while (randomTileValue == 0) {
-            randomRow = StdRandom.uniform(0, n);
-            randomColumn = StdRandom.uniform(0, n);
-            randomTileValue = tiles[randomRow][randomColumn];
-        }
-
-        //TODO rewrite this part
-        ArrayList<TilePoint> neighborTilePoints = new ArrayList<>();
-
-        // top
-        if (randomRow > 0) {
-            int topValue = tiles[randomRow - 1][randomColumn];
-            if (topValue != 0) {
-                TilePoint topTilePoint = new TilePoint(topValue, randomRow - 1, randomColumn);
-                neighborTilePoints.add(topTilePoint);
+        for (int i = 0; i < n; i++) {
+            if (tiles[i][0] != 0 && tiles[i][1] != 0) {
+                int[][] twinTiles = copyTwoDimensional(tiles);
+                twinTiles[i][0] = tiles[i][1];
+                twinTiles[i][1] = tiles[i][0];
+                return new Board(twinTiles);
             }
         }
-
-        // bottom
-        if (randomRow < n - 1) {
-            int bottomValue = tiles[n - 1][randomColumn];
-            if (bottomValue != 0) {
-                TilePoint bottomTilePoint = new TilePoint(bottomValue, n - 1, randomColumn);
-                neighborTilePoints.add(bottomTilePoint);
-            }
-        }
-
-        // left
-        if (randomColumn > 0) {
-            int leftValue = tiles[randomRow][randomColumn - 1];
-            if (leftValue != 0) {
-                TilePoint leftTilePoint = new TilePoint(leftValue, randomRow, randomColumn - 1);
-                neighborTilePoints.add(leftTilePoint);
-            }
-        }
-
-        // right
-        if (randomColumn < n - 1) {
-            int rightValue = tiles[randomRow][n - 1];
-            if (rightValue != 0) {
-                TilePoint rightTilePoint = new TilePoint(rightValue, randomRow, n - 1);
-                neighborTilePoints.add(rightTilePoint);
-            }
-        }
-
-        int neighborIndex = StdRandom.uniform(0, neighborTilePoints.size());
-        TilePoint neighborTilePoint = neighborTilePoints.get(neighborIndex);
-
-
-        int[][] twinTiles = copy2DimensialArray(tiles);
-
-        twinTiles[randomRow][randomColumn] = neighborTilePoint.value;
-        twinTiles[neighborTilePoint.row][neighborTilePoint.column] = randomTileValue;
-
-        return new Board(twinTiles);
+        throw new IllegalArgumentException("twin tiles not found");
     }
 
-    private int getElementRow(int value) {
-        return (value - 1) / n;
-    }
-
-    private int getElementColumn(int value) {
-        return (value - 1) % n;
-    }
-
-    private int[][] copy2DimensialArray(int[][] sourceArray) {
+    private int[][] copyTwoDimensional(int[][] sourceArray) {
         int length = sourceArray.length;
-        int[][] copiedArray = new int[length][length];
+        int[][] copy = new int[length][length];
         for (int i = 0; i < length; i++) {
             for (int j = 0; j < length; j++) {
-                copiedArray[i][j] = sourceArray[i][j];
+                copy[i][j] = sourceArray[i][j];
             }
         }
-        return copiedArray;
+        return copy;
     }
-
-    private class TilePoint {
-        private final int value;
-        private final int row;
-        private final int column;
-
-
-        TilePoint(int value, int row, int column) {
-            this.value = value;
-            this.row = row;
-            this.column = column;
-        }
-    }
-
 
     // unit testing (not graded)
     public static void main(String[] args) {
@@ -293,7 +189,6 @@ public class Board {
         StdOut.println("hamming = " + String.valueOf(initial.hamming()));
         StdOut.println("manhattan = " + String.valueOf(initial.manhattan()));
         StdOut.print("is goal: " + initial.isGoal());
-        StdOut.print(initial.goalBoard);
 
         // check neighbors
         StdOut.println("Neighbors check:");
