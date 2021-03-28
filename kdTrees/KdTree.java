@@ -7,6 +7,8 @@
 import edu.princeton.cs.algs4.Point2D;
 import edu.princeton.cs.algs4.RectHV;
 
+import java.util.Comparator;
+
 public class KdTree {
 
     // Node topNode;
@@ -37,18 +39,58 @@ public class KdTree {
         }
         else {
             if (!contains(p)) {
-                insert(root, p, true);
+                insert(root, p, true); // second node check x axis
             }
         }
     }
 
-    private void insert(Node root, Point2D p, boolean hasXAxis) {
+    private void insert(Node node, Point2D p, boolean useXAxis) {
+        Comparator<Point2D> slopeComparator = useXAxis ? Point2D.X_ORDER : Point2D.Y_ORDER;
 
+        int cmp = slopeComparator.compare(p, node.p);
+
+
+        if (cmp < 0) {
+            // left
+            if (node.lb == null) {
+                node.lb = new Node(p, node.nodeLevel + 1, null, null);
+                size++;
+            }
+            else insert(node.lb, p, !useXAxis);
+        }
+        // what if cmp == 0?
+        else {
+            // right
+            if (node.rt == null) {
+                node.rt = new Node(p, node.nodeLevel + 1, null, null);
+                size++;
+            }
+            else insert(node.rt, p, !useXAxis);
+        }
     }
 
-    // does the set contain point p?
     public boolean contains(Point2D p) {
-        // TODO
+        if (root == null) return false;
+        Node current = root;
+        while (current != null) {
+
+            // int cmp = p.compareTo(current.p);
+            if (p.equals(current.p)) return true;
+
+            boolean useXAxis = current.nodeLevel % 2 == 0;
+            Comparator<Point2D> point2DComparator = useXAxis ? Point2D.X_ORDER : Point2D.Y_ORDER;
+
+            int cmp = point2DComparator.compare(p, current.p);
+
+            if (cmp < 0) {
+                current = current.lb;
+            }
+
+            if (cmp > 0) {
+                current = current.rt;
+            }
+        }
+
         return false;
     }
 
@@ -61,21 +103,25 @@ public class KdTree {
         return null;
     }
 
-    // a nearest neighbor in the set to point p; null if the set is empty
     public Point2D nearest(Point2D p) {
-
+        if (root == null) return null;
         return null;
     }
 
-
     // unit testing of the methods (optional)
     public static void main(String[] args) {
-
+        // test
+        KdTree kdTree = new KdTree();
+        kdTree.insert(new Point2D(0.7, 0.2));
+        kdTree.insert(new Point2D(0.5, 0.4));
+        kdTree.insert(new Point2D(0.2, 0.3));
+        kdTree.insert(new Point2D(0.4, 0.7));
+        kdTree.insert(new Point2D(0.9, 0.6));
     }
 
     private static class Node {
         private final Point2D p;      // the point
-        private final int nodeLevel;    // the axis-aligned rectangle corresponding to this node
+        private final int nodeLevel;    // even level - vertical, odd - horizontal
         private Node lb;        // the left/bottom subtree
         private Node rt;            // the right/top subtree
 
