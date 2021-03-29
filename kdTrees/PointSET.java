@@ -4,6 +4,7 @@
  *  Description:
  **************************************************************************** */
 
+import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.Point2D;
 import edu.princeton.cs.algs4.RectHV;
 import edu.princeton.cs.algs4.SET;
@@ -14,7 +15,7 @@ import java.util.ArrayList;
 
 public class PointSET {
 
-    private SET<Point2D> points;
+    private final SET<Point2D> points;
 
     // construct an empty set of points
     public PointSET() {
@@ -50,6 +51,7 @@ public class PointSET {
     // all points that are inside the rectangle (or on the boundary)
     public Iterable<Point2D> range(
             RectHV rect) {
+        if (rect == null) throw new IllegalArgumentException();
         ArrayList<Point2D> range = new ArrayList<>();
         points.forEach(point -> { if (rect.contains(point)) range.add(point); });
         return range;
@@ -58,6 +60,7 @@ public class PointSET {
     // a nearest neighbor in the set to point p; null if the set is empty
     public Point2D nearest(
             Point2D p) {
+        if (p == null) throw new IllegalArgumentException();
         Point2D nearest = null;
         double minDistance = Double.POSITIVE_INFINITY;
         for (Point2D point : points) {
@@ -72,7 +75,23 @@ public class PointSET {
         return nearest;
     }
 
+    // unit testing of the methods (optional)
     public static void main(
             String[] args) {
-    }                  // unit testing of the methods (optional)
+        String filename = args[0];
+        In in = new In(filename);
+
+        PointSET pointsBrute = new PointSET();
+
+        while (!in.isEmpty()) {
+            double x = in.readDouble();
+            double y = in.readDouble();
+
+            Point2D point = new Point2D(x, y);
+            pointsBrute.insert(point);
+        }
+
+        pointsBrute.draw();
+        StdDraw.show();
+    }
 }
