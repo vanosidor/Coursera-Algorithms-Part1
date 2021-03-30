@@ -45,6 +45,7 @@ public class PointSET {
     // draw all points to standard draw
     public void draw() {
         StdDraw.setPenColor(Color.BLACK);
+        StdDraw.setPenRadius(0.01);
         points.forEach(Point2D::draw);
     }
 
@@ -64,7 +65,10 @@ public class PointSET {
         Point2D nearest = null;
         double minDistance = Double.POSITIVE_INFINITY;
         for (Point2D point : points) {
-            if (!point.equals(p)) {
+            if (point.equals(p)) {
+                return point;
+            }
+            else {
                 double distance = point.distanceSquaredTo(p);
                 if (distance < minDistance) {
                     minDistance = distance;
@@ -92,6 +96,9 @@ public class PointSET {
         }
 
         pointsBrute.draw();
+
+        pointsBrute.nearest(new Point2D(0.5, 0.75));
+
         StdDraw.show();
     }
 }
