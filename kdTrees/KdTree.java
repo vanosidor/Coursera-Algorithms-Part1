@@ -8,6 +8,7 @@ import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.Point2D;
 import edu.princeton.cs.algs4.RectHV;
 import edu.princeton.cs.algs4.StdDraw;
+import edu.princeton.cs.algs4.StdOut;
 
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -62,6 +63,7 @@ public class KdTree {
     }
 
     public boolean contains(Point2D p) {
+        if (p == null) throw new IllegalArgumentException();
         if (root == null) return false;
         Node current = root;
         while (current != null) {
@@ -175,20 +177,29 @@ public class KdTree {
         double ymin = rect.ymin();
         double ymax = rect.ymax();
 
+        double currentPointX = node.p.x();
+        double currentPointY = node.p.y();
+
         Point2D newNearest = (node.p.distanceSquaredTo(queryPoint) < nearestPoint
-                .distanceSquaredTo(queryPoint)) ? node.p : nearestPoint;
+                .distanceSquaredTo(queryPoint)) ?
+                             node.p : nearestPoint;
 
         if (node.nodeLevel % 2 == 0) {
-            if (queryPoint.x() > node.p.x()) {
+            if (queryPoint.x() > currentPointX) {
                 // search right
                 Point2D nearestRight = nearest(queryPoint, newNearest, node.rt,
-                                               new RectHV(node.p.x(), ymin, xmax, ymax));
-                if (node.p.distanceSquaredTo(queryPoint) < rect.distanceSquaredTo(queryPoint)) {
+                                               new RectHV(currentPointX, ymin, xmax, ymax));
+                // must check left rect distance
+                RectHV leftRect = new RectHV(xmin, ymin,
+                                             currentPointX,
+                                             ymax);
+                if (nearestRight.distanceSquaredTo(queryPoint) < leftRect
+                        .distanceSquaredTo(queryPoint)) {
                     return nearestRight;
                 }
                 else {
                     Point2D nearestLeft = nearest(queryPoint, newNearest, node.lb,
-                                                  new RectHV(xmin, ymin, node.p.x(), ymax));
+                                                  leftRect);
                     if (nearestLeft.distanceSquaredTo(queryPoint) < nearestRight
                             .distanceSquaredTo(queryPoint)) return nearestLeft;
                     else return nearestRight;
@@ -197,13 +208,16 @@ public class KdTree {
             else {
                 // search left
                 Point2D nearestLeft = nearest(queryPoint, newNearest, node.lb,
-                                              new RectHV(xmin, ymin, node.p.x(), ymax));
-                if (node.p.distanceSquaredTo(queryPoint) < rect.distanceSquaredTo(queryPoint)) {
+                                              new RectHV(xmin, ymin, currentPointX, ymax));
+                RectHV rightRect = new RectHV(currentPointX, ymin,
+                                              xmax, ymax);
+                if (nearestLeft.distanceSquaredTo(queryPoint) < rightRect
+                        .distanceSquaredTo(queryPoint)) {
                     return nearestLeft;
                 }
                 else {
                     Point2D nearestRight = nearest(queryPoint, newNearest, node.rt,
-                                                   new RectHV(node.p.x(), ymin, xmax, ymax));
+                                                   rightRect);
                     if (nearestRight.distanceSquaredTo(queryPoint) < nearestLeft
                             .distanceSquaredTo(queryPoint)) return nearestRight;
                     else return nearestLeft;
@@ -211,16 +225,19 @@ public class KdTree {
             }
         }
         else {
-            if (queryPoint.y() > node.p.y()) {
+            if (queryPoint.y() > currentPointY) {
                 //search top
                 Point2D nearestTop = nearest(queryPoint, newNearest, node.rt,
-                                             new RectHV(xmin, node.p.y(), xmax, ymax));
-                if (node.p.distanceSquaredTo(queryPoint) < rect.distanceSquaredTo(queryPoint)) {
+                                             new RectHV(xmin, currentPointY, xmax, ymax));
+                RectHV bottomRect = new RectHV(xmin, ymin, xmax,
+                                               currentPointY);
+                if (nearestTop.distanceSquaredTo(queryPoint) < bottomRect
+                        .distanceSquaredTo(queryPoint)) {
                     return nearestTop;
                 }
                 else {
                     Point2D nearestBottom = nearest(queryPoint, newNearest, node.lb,
-                                                    new RectHV(xmin, ymin, xmax, node.p.y()));
+                                                    new RectHV(xmin, ymin, xmax, currentPointY));
                     if (nearestBottom.distanceSquaredTo(queryPoint) < nearestTop
                             .distanceSquaredTo(queryPoint)) return nearestBottom;
                     else return nearestTop;
@@ -229,13 +246,16 @@ public class KdTree {
             else {
                 //search bottom
                 Point2D nearestBottom = nearest(queryPoint, newNearest, node.lb,
-                                                new RectHV(xmin, ymin, xmax, node.p.y()));
-                if (node.p.distanceSquaredTo(queryPoint) < rect.distanceSquaredTo(queryPoint)) {
+                                                new RectHV(xmin, ymin, xmax, currentPointY));
+                RectHV topRect = new RectHV(xmin, currentPointY,
+                                            xmax, ymax);
+                if (nearestBottom.distanceSquaredTo(queryPoint) < topRect
+                        .distanceSquaredTo(queryPoint)) {
                     return nearestBottom;
                 }
                 else {
                     Point2D nearestTop = nearest(queryPoint, newNearest, node.rt,
-                                                 new RectHV(xmin, node.p.y(), xmax, ymax));
+                                                 topRect);
                     if (nearestTop.distanceSquaredTo(queryPoint) < nearestBottom
                             .distanceSquaredTo(queryPoint)) return nearestTop;
                     else return nearestBottom;
@@ -261,9 +281,9 @@ public class KdTree {
         kdTree.draw();
 
         // Iterable<Point2D> range = kdTree.range(new RectHV(0.16,  0.41, 0.53, 0.54));
-        Point2D query = new Point2D(0.289, 0.476);
-        // Point2D nearest = kdTree.nearest(query);
-        // StdOut.println(nearest);
+        Point2D query = new Point2D(0.125, 0.875);
+        Point2D nearest = kdTree.nearest(query);
+        StdOut.println(nearest);
         StdDraw.setPenColor(StdDraw.GREEN);
         StdDraw.setPenRadius(0.02);
         query.draw();
