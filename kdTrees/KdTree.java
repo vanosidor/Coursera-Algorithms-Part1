@@ -8,7 +8,6 @@ import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.Point2D;
 import edu.princeton.cs.algs4.RectHV;
 import edu.princeton.cs.algs4.StdDraw;
-import edu.princeton.cs.algs4.StdOut;
 
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -169,119 +168,80 @@ public class KdTree {
 
     private Point2D nearest(Point2D queryPoint, Point2D nearestPoint, Node node, RectHV rect) {
 
-        if (node != null) {
-            StdOut.println("neaerst= " + nearestPoint + ", node" + node.p);
-        }
-
         if (node == null) return nearestPoint;
 
-        // if (node.p.distanceSquaredTo(queryPoint) < nearestPoint.distanceSquaredTo(queryPoint))
-        //     nearestPoint = node.p;
         double xmin = rect.xmin();
         double xmax = rect.xmax();
         double ymin = rect.ymin();
         double ymax = rect.ymax();
 
+        Point2D newNearest = (node.p.distanceSquaredTo(queryPoint) < nearestPoint
+                .distanceSquaredTo(queryPoint)) ? node.p : nearestPoint;
+
         if (node.nodeLevel % 2 == 0) {
-            Point2D newNearest = (node.p.distanceSquaredTo(queryPoint) < nearestPoint
-                    .distanceSquaredTo(queryPoint)) ? node.p : nearestPoint;
-
-            RectHV leftRect = new RectHV(xmin, ymin, node.p.x(), ymax);
-            RectHV rightRect = new RectHV(node.p.x(), ymin, xmax, ymax);
-
-            // TODO return result
             if (queryPoint.x() > node.p.x()) {
                 // search right
-                Point2D nearestRight = nearest(queryPoint, newNearest, node.rt, rightRect);
+                Point2D nearestRight = nearest(queryPoint, newNearest, node.rt,
+                                               new RectHV(node.p.x(), ymin, xmax, ymax));
                 if (node.p.distanceSquaredTo(queryPoint) < rect.distanceSquaredTo(queryPoint)) {
                     return nearestRight;
                 }
                 else {
-                    Point2D nearestLeft = nearest(queryPoint, newNearest, node.lb, leftRect);
-                    // TODO check
-                    return nearestLeft;
+                    Point2D nearestLeft = nearest(queryPoint, newNearest, node.lb,
+                                                  new RectHV(xmin, ymin, node.p.x(), ymax));
+                    if (nearestLeft.distanceSquaredTo(queryPoint) < nearestRight
+                            .distanceSquaredTo(queryPoint)) return nearestLeft;
+                    else return nearestRight;
                 }
             }
             else {
                 // search left
                 Point2D nearestLeft = nearest(queryPoint, newNearest, node.lb,
-                                              leftRect);
+                                              new RectHV(xmin, ymin, node.p.x(), ymax));
+                if (node.p.distanceSquaredTo(queryPoint) < rect.distanceSquaredTo(queryPoint)) {
+                    return nearestLeft;
+                }
+                else {
+                    Point2D nearestRight = nearest(queryPoint, newNearest, node.rt,
+                                                   new RectHV(node.p.x(), ymin, xmax, ymax));
+                    if (nearestRight.distanceSquaredTo(queryPoint) < nearestLeft
+                            .distanceSquaredTo(queryPoint)) return nearestRight;
+                    else return nearestLeft;
+                }
             }
-
-
         }
         else {
-            // Point2D nearestTop = nearest(queryPoint, nearestPoint, node.rt);
-            // Point2D nearestBottom = nearest(queryPoint, nearestPoint, node.lb);
+            if (queryPoint.y() > node.p.y()) {
+                //search top
+                Point2D nearestTop = nearest(queryPoint, newNearest, node.rt,
+                                             new RectHV(xmin, node.p.y(), xmax, ymax));
+                if (node.p.distanceSquaredTo(queryPoint) < rect.distanceSquaredTo(queryPoint)) {
+                    return nearestTop;
+                }
+                else {
+                    Point2D nearestBottom = nearest(queryPoint, newNearest, node.lb,
+                                                    new RectHV(xmin, ymin, xmax, node.p.y()));
+                    if (nearestBottom.distanceSquaredTo(queryPoint) < nearestTop
+                            .distanceSquaredTo(queryPoint)) return nearestBottom;
+                    else return nearestTop;
+                }
+            }
+            else {
+                //search bottom
+                Point2D nearestBottom = nearest(queryPoint, newNearest, node.lb,
+                                                new RectHV(xmin, ymin, xmax, node.p.y()));
+                if (node.p.distanceSquaredTo(queryPoint) < rect.distanceSquaredTo(queryPoint)) {
+                    return nearestBottom;
+                }
+                else {
+                    Point2D nearestTop = nearest(queryPoint, newNearest, node.rt,
+                                                 new RectHV(xmin, node.p.y(), xmax, ymax));
+                    if (nearestTop.distanceSquaredTo(queryPoint) < nearestBottom
+                            .distanceSquaredTo(queryPoint)) return nearestTop;
+                    else return nearestBottom;
+                }
+            }
         }
-
-        // if (node.nodeLevel % 2 == 0) {
-        //     Point2D nearestLeft = nearest(queryPoint, nearestPoint, node.lb );
-        //     Point2D nearestRight = nearest(queryPoint, nearestPoint, node.rt);
-        //
-        //
-        //     if (queryPoint.x() > node.p.x()) {
-        //         // right
-        //         Point2D npr = nearest(queryPoint,
-        //                               (node.p.distanceSquaredTo(queryPoint) < nearestPoint
-        //                                       .distanceSquaredTo(queryPoint) ? node.p :
-        //                                nearestPoint), node.rt);
-        //         if (npr.distanceSquaredTo(queryPoint) > Math.abs(node.p.x() - queryPoint.x())) {
-        //             Point2D npl = nearest(queryPoint, npr, node.lb);
-        //             return (queryPoint.distanceSquaredTo(npr) > queryPoint.distanceSquaredTo(npl) ?
-        //                     npl : npr);
-        //         }
-        //         else {
-        //             return npr;
-        //         }
-        //     }
-        //     else {
-        //         Point2D npl = nearest(queryPoint,
-        //                               node.p.distanceSquaredTo(queryPoint) < nearestPoint
-        //                                       .distanceSquaredTo(queryPoint) ? node.p :
-        //                               nearestPoint, node.lb);
-        //
-        //         if (npl.distanceSquaredTo(queryPoint) > Math.abs(node.p.x() - queryPoint.x())) {
-        //             Point2D npr = nearest(queryPoint, npl, node.rt);
-        //             return npr.distanceSquaredTo(queryPoint) > npl.distanceSquaredTo(queryPoint) ?
-        //                    npl : npr;
-        //         }
-        //         else {
-        //             return npl;
-        //         }
-        //     }
-        // }
-        // else {
-        //     if (queryPoint.y() > node.p.y()) {
-        //         Point2D npu = nearest(queryPoint,
-        //                               node.p.distanceSquaredTo(queryPoint) < nearestPoint
-        //                                       .distanceSquaredTo(queryPoint) ?
-        //                               node.p : nearestPoint, node.rt);
-        //         if (npu.distanceSquaredTo(queryPoint) > Math.abs(node.p.y() - queryPoint.y())) {
-        //             Point2D npd = nearest(queryPoint, npu, node.lb);
-        //             return npu.distanceSquaredTo(queryPoint) > npd.distanceSquaredTo(queryPoint) ?
-        //                    npd : npu;
-        //         }
-        //         else {
-        //             return npu;
-        //         }
-        //     }
-        //     else {
-        //         Point2D npd = nearest(queryPoint,
-        //                               node.p.distanceSquaredTo(queryPoint) < nearestPoint
-        //                                       .distanceSquaredTo(queryPoint) ?
-        //                               node.p : nearestPoint, node.lb);
-        //         if (npd.distanceSquaredTo(queryPoint) > Math.abs(node.p.y() - queryPoint.y())) {
-        //             Point2D npu = nearest(queryPoint, npd, node.rt);
-        //             return npu.distanceSquaredTo(queryPoint) > npd.distanceSquaredTo(queryPoint) ?
-        //                    npd : npu;
-        //         }
-        //         else {
-        //             return npd;
-        //         }
-        //     }
-        //
-        // }
     }
 
     // unit testing of the methods (optional)
@@ -302,8 +262,8 @@ public class KdTree {
 
         // Iterable<Point2D> range = kdTree.range(new RectHV(0.16,  0.41, 0.53, 0.54));
         Point2D query = new Point2D(0.289, 0.476);
-        Point2D nearest = kdTree.nearest(query);
-        StdOut.print(nearest);
+        // Point2D nearest = kdTree.nearest(query);
+        // StdOut.println(nearest);
         StdDraw.setPenColor(StdDraw.GREEN);
         StdDraw.setPenRadius(0.02);
         query.draw();
